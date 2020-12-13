@@ -6,6 +6,7 @@ ropes = [];
 anchors = [];
 
 current_rope = null;
+draggingObject = null;
 
 function setup() {
   ropeSlider = createSlider(20.1, 55, 40);
@@ -53,6 +54,9 @@ function draw() {
 
   background(220);
 
+  if(draggingObject !== null) {
+    draggingObject.body.setPosition(scaleToWorld(mouseX, mouseY))
+  }
 
   // We must always step through time!
   let timeStep = 1.0 / 30;
@@ -81,7 +85,21 @@ function keyReleased() {
   }
 }
 
+function mousePressed() {
+  anchors.forEach(anchor => {
+    let pos = scaleToPixels(anchor.body.getPosition())
+    if(createVector(mouseX, mouseY).dist(createVector(pos.x, pos.y)) < 30) {
+      draggingObject = anchor;
+      return;
+    }
+  });
+}
+
 function mouseClicked() {
+  if(draggingObject !== null) {
+    draggingObject = null;
+    return;
+  }
   if(mouseX < 230 && mouseY < 80) {
     return;
   }
