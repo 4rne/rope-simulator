@@ -86,10 +86,11 @@ function keyReleased() {
 }
 
 function mousePressed() {
-  anchors.forEach(anchor => {
-    let pos = scaleToPixels(anchor.body.getPosition())
+  anchors.concat(weights).forEach(object => {
+    let pos = scaleToPixels(object.body.getPosition())
     if(createVector(mouseX, mouseY).dist(createVector(pos.x, pos.y)) < 30) {
-      draggingObject = anchor;
+      draggingObject = object;
+      object.body.setLinearVelocity(planck.Vec2());
       return;
     }
   });
