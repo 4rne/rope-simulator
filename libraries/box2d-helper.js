@@ -6,29 +6,29 @@
 var scaleFactor;
 
 var scaleToWorld = function(a,b) {
-  if (a instanceof box2d.b2Vec2) {
-    var newv = new box2d.b2Vec2();
+  if (a instanceof planck.Vec2) {
+    var newv = new planck.Vec2();
     newv.x = (a.x)/scaleFactor;
     newv.y = (a.y)/scaleFactor;
     return newv;
   } else if ("undefined"!=typeof b) {
-    var newv = new box2d.b2Vec2();
+    var newv = new planck.Vec2();
     newv.x = (a)/scaleFactor;
     newv.y = (b)/scaleFactor;
     return newv;
   } else {
-    return a/scaleFactor;
+    return a.mul(1/scaleFactor);
   }
 };
 
 var scaleToPixels = function(a,b) {
-  if (a instanceof box2d.b2Vec2) {
-    var newv = new box2d.b2Vec2();
+  if (a instanceof planck.Vec2) {
+    var newv = new planck.Vec2();
     newv.x = a.x*scaleFactor;
     newv.y = a.y*scaleFactor;
     return newv;
   } else if ("undefined"!=typeof b) {
-    var newv = new box2d.b2Vec2();
+    var newv = new planck.Vec2();
     newv.x = a*scaleFactor;
     newv.y = b*scaleFactor;
     return newv;
@@ -43,15 +43,14 @@ var scaleToPixels = function(a,b) {
 
 var createWorld = function() {
 
-	var worldAABB = new box2d.b2AABB();
-	worldAABB.lowerBound.SetXY(-this.bounds, -this.bounds);
-	worldAABB.upperBound.SetXY(this.bounds, this.bounds);
-	var gravity = new box2d.b2Vec2(0,20);
-	var doSleep = true;
+	var world = planck.World({
+    gravity: new planck.Vec2(0, 9.81),
+    allowSleep: false
+  });
 
   scaleFactor = 10;
 
-	return new box2d.b2World(gravity, doSleep);
+	return world
 };
 
 // -----------------------------------------------------------------------------

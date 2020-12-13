@@ -18,45 +18,56 @@ anchors = [];
 current_rope = null;
 
 function setup() {
+  ropeSlider = createSlider(20.1, 55, 40);
+  ropeSlider.position(20, 20);
+
   world = createWorld();
   createCanvas(WIDTH, HEIGHT);
 
   anchor = new Anchor(400, 200);
+  anchors.push(anchor);
+  anchor2 = new Anchor(800, 200);
+  anchors.push(anchor2);
+  
   weight = new Weight(600, 400);
   weights.push(weight);
-  anchors.push(anchor);
 
-  let djd = new box2d.b2DistanceJointDef();
-  // Connection between previous particle and this one
-  djd.bodyA = anchor.body;
-  djd.bodyB = weight.body;
-  // Equilibrium length
-  djd.length = scaleToWorld(300);
+  rope = new Rope(planck.RopeJoint({
+    bodyA: anchor.body,
+    localAnchorA: planck.Vec2(0.0, 0.0),
+    bodyB: weight.body,
+    localAnchorB: planck.Vec2(0.0, 0.0),
+    maxLength: 25
+  }))
+  world.createJoint(rope.joint);
 
-  // These properties affect how springy the joint is
-  djd.frequencyHz = 4.9; // Try a value less than 5 (0 for no elasticity)
-  djd.dampingRatio = 0.1; // Ranges between 0 and 1 (1 for no springiness)
-
-  // Make the joint.  Note we aren't storing a reference to the joint ourselves anywhere!
-  // We might need to someday, but for now it's ok
-  dj = world.CreateJoint(djd);
-  
-  console.log(dj.prototype);
+  ropes.push(rope);
 
   
-  // rope = new Rope(weight.position.x, weight.position.y);
-  // rope.add_bend(anchor.position.x, anchor.position.y);
-  // append(ropes, rope);
+  rope2 = new Rope(planck.RopeJoint({
+    bodyA: anchor2.body,
+    localAnchorA: planck.Vec2(0.0, 0.0),
+    bodyB: weight.body,
+    localAnchorB: planck.Vec2(0.0, 0.0),
+    maxLength: 25
+  }))
+  world.createJoint(rope2.joint);
+
+  ropes.push(rope2);
 }
 
 function draw() {
+  let r = ropeSlider.value();
+  rope.joint.setMaxLength(r);
+  rope2.joint.setMaxLength(r);
+
   background(220);
 
 
   // We must always step through time!
   let timeStep = 1.0 / 30;
   // 2nd and 3rd arguments are velocity and position iterations
-  world.Step(timeStep, 10, 10);
+  world.step(timeStep);
 
   weights.forEach(function(weight) {
     weight.display();
@@ -81,122 +92,76 @@ function keyReleased() {
 }
 
 function mouseClicked() {
-  if (keyIsPressed && keyCode == CONTROL) {
-    anchors.push(new Anchor(mouseX, mouseY));
-  } else if (keyIsPressed && keyCode == SHIFT) {
-    if (current_rope == null) {
-      current_rope = new Rope(mouseX, mouseY);
-      ropes.push(current_rope);
-    } else {
-      current_rope.add_bend(mouseX, mouseY);
-    }
-  } else {
-    weights.push(new Weight(mouseX, mouseY));
-  }
+  // if (keyIsPressed && keyCode == CONTROL) {
+  //   anchors.push(new Anchor(mouseX, mouseY));
+  // } else if (keyIsPressed && keyCode == SHIFT) {
+  //   if (current_rope == null) {
+  //     current_rope = new Rope(mouseX, mouseY);
+  //     ropes.push(current_rope);
+  //   } else {
+  //     current_rope.add_bend(mouseX, mouseY);
+  //   }
+  // } else {
+  //   weights.push(new Weight(mouseX, mouseY));
+  // }
 }
 
 // Class used to model a rope to connect objects
 class Rope {
-  constructor(x, y) {
-    this.bends = [];
-    this.add_bend(x, y);
+  constructor(joint) {
+    this.joint = joint
   }
 
   update() {
 
   }
 
-  add_bend(x, y) {
-    for (let i = 0; i < objects.length; i++) {
-      if(dist(x, y, objects[i].position.x, objects[i].position.y) < 25)
-        {
-          append(this.bends, objects[i]);
-          break;
-        }
-    }
-  }
-
-  draw() {
-
-    noFill();
+  display() {
+    //noFill();
     strokeWeight(3.0);
     strokeJoin(ROUND);
-    beginShape();
-    for (let i = 0; i < this.bends.length; i++) {
-      vertex(this.bends[i].position.x, this.bends[i].position.y);
-    }
-    if (current_rope == this) {
-      vertex(mouseX, mouseY);
-    }
-    endShape();
+    let posA = scaleToPixels(this.joint.getBodyA().getPosition());
+    let posB = scaleToPixels(this.joint.getBodyB().getPosition());
+    line(posA.x, posA.y, posB.x, posB.y);
+    strokeWeight(1.0);
   }
 }
 
 // Class used to model anchor points for ropes
 class Anchor {
   constructor(x, y) {
-    let bd = new box2d.b2BodyDef();
-    bd.type = box2d.b2BodyType.b2_staticBody;
-    bd.position = scaleToWorld(x, y);
-
-    // Define a fixture
-    let fd = new box2d.b2FixtureDef();
-    // Fixture holds shape
-    fd.shape = new box2d.b2PolygonShape();
-    fd.shape.SetAsBox(scaleToWorld(this.mass / 2), scaleToWorld(this.mass / 2));
-
-    // Some physics
-    fd.density = 1.0;
-    fd.friction = 0.5;
-    fd.restitution = 0.2;
-
-    // Create the body
-    this.body = world.CreateBody(bd);
-    // Attach the fixture
-    this.body.CreateFixture(fd);
-
-    // Some additional stuff
-    this.body.SetLinearVelocity(new box2d.b2Vec2(0, 0));
-    this.body.SetAngularVelocity(0);
+    this.body = world.createBody();
+    this.body.createFixture(planck.Circle(1.5));
+    this.body.setPosition(scaleToWorld(x, y));
+    this.body.setMassData({
+      mass : 0,
+      center : planck.Vec2(),
+      I : 1
+    })
   }
 
   display() {
-    let pos = scaleToPixels(this.body.GetPosition());
+    let pos = scaleToPixels(this.body.getPosition());
     fill("#abc");
     circle(pos.x, pos.y, 30);
     fill("#555");
-    text("load: " + this.sum, pos.x + 20, pos.y);
+    let force = this.body.getJointList().joint.getReactionForce(1/30).mul(1/1000)
+    text("load →: " + force.x.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
+    text("load ↑: " + force.y.toFixed(2) * -1 + "kN", pos.x + 20, pos.y);
+    text("load sum: " + force.length().toFixed(2) + "kN", pos.x + 20, pos.y + 20);
   }
 }
 
 class Weight {
   constructor(x, y) {
-    this.mass = 42
-
-    // Define a body
-    let bd = new box2d.b2BodyDef();
-    bd.type = box2d.b2BodyType.b2_dynamicBody;
-    bd.position = scaleToWorld(x, y);
-
-    // Define a fixture
-    let fd = new box2d.b2FixtureDef();
-    // Fixture holds shape
-    fd.shape = new box2d.b2PolygonShape();
-    fd.shape.SetAsBox(scaleToWorld(this.mass / 2), scaleToWorld(this.mass / 2));
-
-    // Some physics
-    fd.density = 1.0;
-    fd.friction = 0.5;
-    fd.restitution = 0.2;
-
-    // Create the body
-    this.body = world.CreateBody(bd);
-    // Attach the fixture
-    this.body.CreateFixture(fd);
-
-    // Some additional stuff
-    this.body.SetLinearVelocity(new box2d.b2Vec2(0, 0));
-    this.body.SetAngularVelocity(0);
+    this.body = world.createDynamicBody();
+    this.body.createFixture(planck.Box(2, 2));
+    this.body.setPosition(scaleToWorld(x, y));
+    this.body.setMassData({
+      mass : 75000,
+      center : planck.Vec2(),
+      I : 1
+    })
   }
 
   // This function removes the particle from the box2d world
@@ -207,7 +172,7 @@ class Weight {
   // Is the particle ready for deletion?
   done() {
     // Let's find the screen position of the particle
-    let pos = scaleToPixels(this.body.GetPosition());
+    let pos = scaleToPixels(this.body.getPosition());
     // Is it off the bottom of the screen?
     if (pos.y > height) {
       this.killBody();
@@ -219,9 +184,9 @@ class Weight {
   // Drawing the box
   display() {
     // Get the body's position
-    let pos = scaleToPixels(this.body.GetPosition());
+    let pos = scaleToPixels(this.body.getPosition());
     // Get its angle of rotation
-    let a = this.body.GetAngleRadians();
+    let a = this.body.getAngle();
 
     // Draw it!
     rectMode(CENTER);
@@ -231,7 +196,14 @@ class Weight {
     fill("#555");
     stroke(200);
     strokeWeight(2);
-    rect(0, 0, this.mass, this.mass);
+    rect(0, 0, 50, 50);
     pop();
+    let planckA = scaleToPixels(this.body.getJointList().next.joint.getBodyA().getPosition())
+    let planckB = scaleToPixels(this.body.getJointList().joint.getBodyA().getPosition())
+    let v1 = createVector(planckA.x - pos.x, planckA.y - pos.y)
+    let v2 = createVector(planckB.x - pos.x, planckB.y - pos.y)
+    let angle = degrees(v1.angleBetween(v2))
+    text("mass: " + this.body.getMass() / 1000 + "kg", pos.x + 30, pos.y)
+    text("angle: " + angle.toFixed(1) + "°", pos.x + 30, pos.y + 20)
   }
 }
