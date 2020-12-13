@@ -1,13 +1,3 @@
-// text(this.mass, this.position.x + this.size / 2, this.position.y - this.size / 2)
-// let dx = anchor.position.x - weight.position.x
-// let dy = anchor.position.y - weight.position.y
-// this.angle = atan2(dx, dy)
-// text(degrees(this.angle).toFixed(2) + "°", this.position.x + this.size / 2, this.position.y - this.size / 4)
-// text((-cos(this.angle) * this.mass).toFixed(2) + "↓", this.position.x + this.size / 2, this.position.y)
-// text((tan(this.angle) * this.mass).toFixed(2) + "←", this.position.x + this.size / 2, this.position.y + this.size / 4)
-
-
-
 HEIGHT = 800;
 WIDTH = 1200;
 
@@ -92,18 +82,21 @@ function keyReleased() {
 }
 
 function mouseClicked() {
-  // if (keyIsPressed && keyCode == CONTROL) {
-  //   anchors.push(new Anchor(mouseX, mouseY));
-  // } else if (keyIsPressed && keyCode == SHIFT) {
-  //   if (current_rope == null) {
-  //     current_rope = new Rope(mouseX, mouseY);
-  //     ropes.push(current_rope);
-  //   } else {
-  //     current_rope.add_bend(mouseX, mouseY);
-  //   }
-  // } else {
-  //   weights.push(new Weight(mouseX, mouseY));
-  // }
+  if(mouseX < 230 && mouseY < 80) {
+    return;
+  }
+  if (keyIsPressed && keyCode == CONTROL) {
+    anchors.push(new Anchor(mouseX, mouseY));
+  } else if (keyIsPressed && keyCode == SHIFT) {
+    if (current_rope == null) {
+      current_rope = new Rope(mouseX, mouseY);
+      ropes.push(current_rope);
+    } else {
+      current_rope.add_bend(mouseX, mouseY);
+    }
+  } else {
+    weights.push(new Weight(mouseX, mouseY));
+  }
 }
 
 // Class used to model a rope to connect objects
@@ -145,7 +138,13 @@ class Anchor {
     fill("#abc");
     circle(pos.x, pos.y, 30);
     fill("#555");
-    let force = this.body.getJointList().joint.getReactionForce(1/30).mul(1/1000)
+    let force = planck.Vec2();
+    let jointList = this.body.getJointList()
+    let currentJoint = jointList
+    while(currentJoint !== null) {
+      force.add(currentJoint.joint.getReactionForce(1/30).mul(1/1000))
+      currentJoint = currentJoint.next
+    }
     text("load →: " + force.x.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
     text("load ↑: " + force.y.toFixed(2) * -1 + "kN", pos.x + 20, pos.y);
     text("load sum: " + force.length().toFixed(2) + "kN", pos.x + 20, pos.y + 20);
@@ -198,12 +197,16 @@ class Weight {
     strokeWeight(2);
     rect(0, 0, 50, 50);
     pop();
-    let planckA = scaleToPixels(this.body.getJointList().next.joint.getBodyA().getPosition())
-    let planckB = scaleToPixels(this.body.getJointList().joint.getBodyA().getPosition())
-    let v1 = createVector(planckA.x - pos.x, planckA.y - pos.y)
-    let v2 = createVector(planckB.x - pos.x, planckB.y - pos.y)
-    let angle = degrees(v1.angleBetween(v2))
+    if(this.body.getJointList() !== null && 
+       this.body.getJointList().next !== null && 
+       this.body.getJointList().next.next === null) {
+      let planckA = scaleToPixels(this.body.getJointList().next.joint.getBodyA().getPosition())
+      let planckB = scaleToPixels(this.body.getJointList().joint.getBodyA().getPosition())
+      let v1 = createVector(planckA.x - pos.x, planckA.y - pos.y)
+      let v2 = createVector(planckB.x - pos.x, planckB.y - pos.y)
+      let angle = degrees(v1.angleBetween(v2))
+      text("angle: " + angle.toFixed(1) + "°", pos.x + 30, pos.y + 20)
+    }
     text("mass: " + this.body.getMass() / 1000 + "kg", pos.x + 30, pos.y)
-    text("angle: " + angle.toFixed(1) + "°", pos.x + 30, pos.y + 20)
   }
 }
