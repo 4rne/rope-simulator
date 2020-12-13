@@ -172,7 +172,10 @@ class Anchor {
 
 class Weight {
   constructor(x, y) {
-    this.body = world.createDynamicBody();
+    this.body = world.createDynamicBody({
+      linearDamping: 0.3,
+      angularDamping: 0.5
+    });
     this.body.createFixture(planck.Box(2, 2));
     this.body.setPosition(scaleToWorld(x, y));
     this.body.setMassData({
