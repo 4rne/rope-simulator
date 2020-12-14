@@ -9,6 +9,8 @@ current_rope = null;
 draggingObject = null;
 
 function setup() {
+  frameRate(30);
+
   ropeSlider = createSlider(20.1, 55, 40);
   ropeSlider.position(20, 20);
 
@@ -74,6 +76,9 @@ function draw() {
   ropes.forEach(function(rope) {
     rope.display();
   });
+
+  text("fps " +  
+         int(getFrameRate()), width - 40, 10); 
 }
 
 function keyReleased() {
