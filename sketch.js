@@ -166,7 +166,7 @@ class Anchor {
     let jointList = this.body.getJointList()
     let currentJoint = jointList
     while(currentJoint !== null) {
-      force.add(currentJoint.joint.getReactionForce(1/30).mul(1/1000))
+      force.add(currentJoint.joint.getReactionForce(1/30))
       currentJoint = currentJoint.next
     }
     text("load →: " + force.x.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
@@ -181,10 +181,10 @@ class Weight {
       linearDamping: 0.3,
       angularDamping: 0.5
     });
-    this.body.createFixture(planck.Box(2, 2));
+    this.body.createFixture(planck.Box(2.5, 2.5));
     this.body.setPosition(scaleToWorld(x, y));
     this.body.setMassData({
-      mass : 75000,
+      mass : 75,
       center : planck.Vec2(),
       I : 1
     })
@@ -234,6 +234,6 @@ class Weight {
       let angle = degrees(v1.angleBetween(v2))
       text("angle: " + angle.toFixed(1) + "°", pos.x + 30, pos.y + 20)
     }
-    text("mass: " + this.body.getMass() / 1000 + "kg", pos.x + 30, pos.y)
+    text("mass: " + this.body.getMass() + "kg", pos.x + 30, pos.y)
   }
 }
