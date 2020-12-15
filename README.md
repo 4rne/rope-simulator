@@ -1,6 +1,7 @@
 # Physics based rope simulation
+[Try it now](https://4rne.github.io/rope-simulator/)
 ## Usage
-* Click to add weigth objects
+* Click to add weights
 * <kbd>CTRL</kbd> + Click to add anchor points
 * <kbd>Shift</kbd> + Click to add ropes (to be implemented)
 * Drag objects to move them
