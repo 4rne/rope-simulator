@@ -61,8 +61,7 @@ function draw() {
   }
 
   // We must always step through time!
-  let timeStep = 1.0 / 30;
-  // 2nd and 3rd arguments are velocity and position iterations
+  let timeStep = 1.0 / 33;
   world.step(timeStep);
 
   weights.forEach(function(weight) {
