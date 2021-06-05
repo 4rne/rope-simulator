@@ -11,6 +11,8 @@ draggingObject = null;
 function setup() {
   frameRate(30);
 
+  document.addEventListener('contextmenu', event => event.preventDefault());
+
   ropeSlider = createSlider(20.1, 55, 40);
   ropeSlider.position(20, 20);
 
@@ -89,22 +91,44 @@ function keyReleased() {
   }
 }
 
+function getObjectAt(x, y, objects) {
+  for(let i = 0; i < objects.length; i++) {
+    let pos = scaleToPixels(objects[i].body.getPosition())
+    if(createVector(x, y).dist(createVector(pos.x, pos.y)) < 30) {
+      return objects[i];
+    }
+  }
+}
+
 function mousePressed() {
-  anchors.concat(weights).forEach(object => {
-    let pos = scaleToPixels(object.body.getPosition())
-    if(createVector(mouseX, mouseY).dist(createVector(pos.x, pos.y)) < 30) {
+  if (mouseButton === LEFT) {
+    let object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
+    if (object !== null && typeof object != "undefined") {
       draggingObject = object;
       object.body.setLinearVelocity(planck.Vec2());
-      return;
     }
-  });
+  }
+}
+
+function mouseReleased() {
+  if (mouseButton === RIGHT) {
+    let object = getObjectAt(mouseX, mouseY, weights);
+    if (object !== null && typeof object != "undefined") {
+      new_weight = window.prompt("enter new weight (kg)", object.getMass())
+      if(Number.parseInt(new_weight) != "NaN") {
+        object.setMass(new_weight);
+      }
+    }
+  }
 }
 
 function mouseClicked() {
+  // release dragged object
   if(draggingObject !== null) {
     draggingObject = null;
     return;
   }
+  // ignore clicks in slider area
   if(mouseX < 230 && mouseY < 80) {
     return;
   }
@@ -182,11 +206,20 @@ class Weight {
     });
     this.body.createFixture(planck.Box(2.5, 2.5));
     this.body.setPosition(scaleToWorld(x, y));
+    this.setMass(75);
+  }
+
+  setMass(mass) {
+    this.mass = mass
     this.body.setMassData({
-      mass : 75,
+      mass : mass,
       center : planck.Vec2(),
       I : 1
     })
+  }
+
+  getMass() {
+    return this.mass;
   }
 
   // This function removes the particle from the box2d world
