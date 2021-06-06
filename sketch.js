@@ -5,7 +5,7 @@ weights = [];
 ropes = [];
 anchors = [];
 
-current_rope = null;
+current_rope_start = null;
 draggingObject = null;
 
 function setup() {
@@ -82,14 +82,14 @@ function draw() {
          int(getFrameRate()), width - 40, 10); 
 }
 
-function keyReleased() {
-  if (keyCode == SHIFT && current_rope != null) {
-    if (current_rope.bends.length == 1) {
-      ropes.pop();
-    }
-    current_rope = null;
-  }
-}
+// function keyReleased() {
+//   if (keyCode == SHIFT && current_rope_start != null) {
+//     if (current_rope.bends.length == 1) {
+//       ropes.pop();
+//     }
+//     current_rope_start = null;
+//   }
+// }
 
 function getObjectAt(x, y, objects) {
   for(let i = 0; i < objects.length; i++) {
@@ -101,7 +101,7 @@ function getObjectAt(x, y, objects) {
 }
 
 function mousePressed() {
-  if (mouseButton === LEFT) {
+  if (mouseButton === LEFT && !(keyIsPressed && keyCode === SHIFT)) {
     let object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
     if (object !== null && typeof object != "undefined") {
       draggingObject = object;
@@ -139,11 +139,21 @@ function mouseClicked() {
   if (keyIsPressed && keyCode == CONTROL) {
     anchors.push(new Anchor(mouseX, mouseY));
   } else if (keyIsPressed && keyCode == SHIFT) {
-    if (current_rope == null) {
-      current_rope = new Rope(mouseX, mouseY);
-      ropes.push(current_rope);
+    if (current_rope_start == null) {
+      current_rope_start = getObjectAt(mouseX, mouseY, anchors.concat(weights));
     } else {
-      current_rope.add_bend(mouseX, mouseY);
+      let current_rope_end = getObjectAt(mouseX, mouseY, anchors.concat(weights))
+      let joint = planck.RopeJoint({
+        bodyA: current_rope_start.body,
+        localAnchorA: planck.Vec2(0.0, 0.0),
+        bodyB: current_rope_end.body,
+        localAnchorB: planck.Vec2(0.0, 0.0),
+        maxLength: 25
+      });
+      world.createJoint(joint);
+      current_rope_start = null;
+      let rope = new Rope(joint);
+      ropes.push(rope);
     }
   } else {
     weights.push(new Weight(mouseX, mouseY));
@@ -209,6 +219,10 @@ class Anchor {
     text("load →: " + force.x.toFixed(2) + "kN, max: " + this.peakForceX.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
     text("load ↑: " + force.y.toFixed(2) * -1 + "kN, max: " + this.peakForceY.toFixed(2) + "kN", pos.x + 20, pos.y);
     text("load sum: " + force.length().toFixed(2) + "kN, max: " + this.peakForceSum.toFixed(2) + "kN", pos.x + 20, pos.y + 20);
+    if(current_rope_start !== null) {
+      let pos = scaleToPixels(current_rope_start.body.getPosition());
+      line(pos.x, pos.y, mouseX, mouseY);
+    }
   }
 }
 
