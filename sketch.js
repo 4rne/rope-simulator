@@ -112,11 +112,15 @@ function mousePressed() {
 
 function mouseReleased() {
   if (mouseButton === RIGHT) {
-    let object = getObjectAt(mouseX, mouseY, weights);
+    let object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
     if (object !== null && typeof object != "undefined") {
-      new_weight = window.prompt("enter new weight (kg)", object.getMass())
-      if(Number.parseInt(new_weight) != "NaN") {
-        object.setMass(new_weight);
+      if(object instanceof Weight){
+        new_weight = window.prompt("enter new weight (kg)", object.getMass())
+        if(Number.parseInt(new_weight) != "NaN") {
+          object.setMass(constrain(new_weight, 1, Infinity));
+        }
+      } else if (object instanceof Anchor) {
+        object.resetPeakForce();
       }
     }
   }
@@ -173,11 +177,18 @@ class Anchor {
     this.body = world.createBody();
     this.body.createFixture(planck.Circle(1.5));
     this.body.setPosition(scaleToWorld(x, y));
+    this.resetPeakForce();
     this.body.setMassData({
       mass : 0,
       center : planck.Vec2(),
       I : 1
     })
+  }
+
+  resetPeakForce() {
+    this.peakForceX = 0;
+    this.peakForceY = 0;
+    this.peakForceSum = 0;
   }
 
   display() {
@@ -192,9 +203,12 @@ class Anchor {
       force.add(currentJoint.joint.getReactionForce(1/30))
       currentJoint = currentJoint.next
     }
-    text("load →: " + force.x.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
-    text("load ↑: " + force.y.toFixed(2) * -1 + "kN", pos.x + 20, pos.y);
-    text("load sum: " + force.length().toFixed(2) + "kN", pos.x + 20, pos.y + 20);
+    this.peakForceX = max(this.peakForceX, abs(force.x));
+    this.peakForceY = max(this.peakForceY, abs(force.y));
+    this.peakForceSum = max(this.peakForceSum, abs(force.length()));
+    text("load →: " + force.x.toFixed(2) + "kN, max: " + this.peakForceX.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
+    text("load ↑: " + force.y.toFixed(2) * -1 + "kN, max: " + this.peakForceY.toFixed(2) + "kN", pos.x + 20, pos.y);
+    text("load sum: " + force.length().toFixed(2) + "kN, max: " + this.peakForceSum.toFixed(2) + "kN", pos.x + 20, pos.y + 20);
   }
 }
 
