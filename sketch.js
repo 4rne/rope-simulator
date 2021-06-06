@@ -17,7 +17,7 @@ function setup() {
   ropeSlider.position(20, 20);
 
   world = createWorld();
-  createCanvas(WIDTH, HEIGHT);
+  createCanvas(windowWidth, windowHeight);
 
   anchor = new Anchor(400, 200);
   anchors.push(anchor);
