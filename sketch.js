@@ -254,8 +254,10 @@ class Anchor {
     let jointList = this.body.getJointList()
     let currentJoint = jointList
     while(currentJoint !== null) {
-      force.add(currentJoint.joint.getReactionForce(1/30))
-      currentJoint = currentJoint.next
+      if(currentJoint.joint.getBodyA().getType() !== "static" && currentJoint.joint.getBodyB().getType() !== "static" ) {
+        force.add(currentJoint.joint.getReactionForce(1/30));
+      }
+      currentJoint = currentJoint.next;
     }
     this.peakForceX = max(this.peakForceX, abs(force.x));
     this.peakForceY = max(this.peakForceY, abs(force.y));
