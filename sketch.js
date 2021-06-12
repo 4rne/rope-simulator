@@ -53,8 +53,12 @@ function setup() {
 
 function draw() {
   let r = ropeSlider.value();
-  rope.joint.setMaxLength(r);
-  rope2.joint.setMaxLength(r);
+  if(rope !== null) {
+    rope.joint.setMaxLength(r);
+  }
+  if(rope2 !== null) {
+    rope2.joint.setMaxLength(r);
+  }
 
   background(220);
 
@@ -106,6 +110,15 @@ function mousePressed() {
     if (object !== null && typeof object != "undefined") {
       draggingObject = object;
       object.body.setLinearVelocity(planck.Vec2());
+    }
+  }
+}
+
+function keyPressed() {
+  if(keyCode === DELETE || key === 'x') {
+    object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
+    if (object !== null && typeof object != "undefined") {
+      object.destroy();
     }
   }
 }
@@ -170,6 +183,15 @@ class Rope {
 
   }
 
+  destroy() {
+    world.destroyJoint(this.joint);
+    for(let i = 0; i < ropes.length; i++) {
+      if(ropes[i] === this) {
+        ropes.splice(i, 1);
+      }
+    }
+  }
+
   display() {
     //noFill();
     strokeWeight(3.0);
@@ -199,6 +221,28 @@ class Anchor {
     this.peakForceX = 0;
     this.peakForceY = 0;
     this.peakForceSum = 0;
+  }
+
+  destroy() {
+    for(let i = 0; i < anchors.length; i++) {
+      if(anchors[i] === this) {
+        anchors.splice(i, 1);
+      }
+    }
+    this.getConnectedRopes().forEach(rope => {
+      rope.destroy()
+    });
+    world.destroyBody(this.body);
+  }
+
+  getConnectedRopes() {
+    let ret = [];
+    for(let i = 0; i < ropes.length; i++) {
+      if(ropes[i].joint.getBodyA() === this.body || ropes[i].joint.getBodyB() === this.body) {
+        ret.push(ropes[i]);
+      }
+    }
+    return ret;
   }
 
   display() {
@@ -250,9 +294,31 @@ class Weight {
     return this.mass;
   }
 
+  getConnectedRopes() {
+    let ret = [];
+    for(let i = 0; i < ropes.length; i++) {
+      if(ropes[i].joint.getBodyA() === this.body || ropes[i].joint.getBodyB() === this.body) {
+        ret.push(ropes[i]);
+      }
+    }
+    return ret;
+  }
+
+  destroy() {
+    for(let i = 0; i < weights.length; i++) {
+      if(weights[i] === this) {
+        weights.splice(i, 1);
+      }
+    }
+    this.getConnectedRopes().forEach(rope => {
+      rope.destroy()
+    });
+    this.killBody();
+  }
+
   // This function removes the particle from the box2d world
   killBody() {
-    world.DestroyBody(this.body);
+    world.destroyBody(this.body);
   }
 
   // Is the particle ready for deletion?
