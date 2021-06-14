@@ -7,6 +7,7 @@ anchors = [];
 
 current_rope_start = null;
 draggingObject = null;
+hoverObject = null;
 
 function setup() {
   frameRate(30);
@@ -86,14 +87,9 @@ function draw() {
          int(getFrameRate()), width - 40, 10); 
 }
 
-// function keyReleased() {
-//   if (keyCode == SHIFT && current_rope_start != null) {
-//     if (current_rope.bends.length == 1) {
-//       ropes.pop();
-//     }
-//     current_rope_start = null;
-//   }
-// }
+function mouseMoved() {
+  hoverObject = getObjectAt(mouseX, mouseY, weights.concat(anchors));
+}
 
 function getObjectAt(x, y, objects) {
   for(let i = 0; i < objects.length; i++) {
@@ -247,7 +243,11 @@ class Anchor {
 
   display() {
     let pos = scaleToPixels(this.body.getPosition());
-    fill("#abc");
+    if (hoverObject === this) {
+      fill("#cde");
+    } else {
+      fill("#abc");
+    }
     circle(pos.x, pos.y, 30);
     fill("#555");
     let force = planck.Vec2();
@@ -347,7 +347,11 @@ class Weight {
     push();
     translate(pos.x, pos.y);
     rotate(a);
-    fill("#555");
+    if (hoverObject === this) {
+      fill("#999");
+    } else {
+      fill("#555");
+    }
     stroke(200);
     strokeWeight(2);
     rect(0, 0, 50, 50);
