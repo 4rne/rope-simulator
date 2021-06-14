@@ -254,7 +254,7 @@ class Anchor {
     let jointList = this.body.getJointList()
     let currentJoint = jointList
     while(currentJoint !== null) {
-      if(currentJoint.joint.getBodyA().getType() !== "static" && currentJoint.joint.getBodyB().getType() !== "static" ) {
+      if(currentJoint.joint.getBodyA().getType() === "static" ^ currentJoint.joint.getBodyB().getType() === "static") {
         force.add(currentJoint.joint.getReactionForce(1/30));
       }
       currentJoint = currentJoint.next;
