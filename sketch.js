@@ -63,6 +63,8 @@ function draw() {
 
   background(220);
 
+  hoverObject = getObjectAt(mouseX, mouseY, weights.concat(anchors));
+
   if(draggingObject !== null) {
     draggingObject.body.setPosition(scaleToWorld(mouseX, mouseY))
   }
@@ -85,10 +87,6 @@ function draw() {
 
   text("fps " +  
          int(getFrameRate()), width - 40, 10); 
-}
-
-function mouseMoved() {
-  hoverObject = getObjectAt(mouseX, mouseY, weights.concat(anchors));
 }
 
 function getObjectAt(x, y, objects) {
