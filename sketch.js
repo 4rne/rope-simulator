@@ -118,7 +118,7 @@ function getRopeAt(x, y) {
 function mousePressed() {
   if (mouseButton === LEFT && !(keyIsPressed && keyCode === SHIFT)) {
     let object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
-    if (object !== null && typeof object != "undefined") {
+    if (object !== null && object !== undefined) {
       draggingObject = object;
       object.body.setLinearVelocity(planck.Vec2());
     }
@@ -128,12 +128,12 @@ function mousePressed() {
 function keyPressed() {
   if(keyCode === DELETE || key === 'x') {
     object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
-    if (object !== null && typeof object != "undefined") {
+    if (object !== null && object !== undefined) {
       object.destroy();
       return;
     }
     object = getRopeAt(mouseX, mouseY);
-    if (object !== null && typeof object != "undefined") {
+    if (object !== null && object !== undefined) {
       object.destroy();
     }  }
 }
@@ -141,7 +141,7 @@ function keyPressed() {
 function mouseReleased() {
   if (mouseButton === RIGHT) {
     let object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
-    if (object !== null && typeof object != "undefined") {
+    if (object !== null && object !== undefined) {
       if(object instanceof Weight){
         new_weight = window.prompt("enter new weight (kg)", object.getMass())
         if(Number.parseInt(new_weight) != "NaN") {
@@ -167,7 +167,7 @@ function mouseClicked() {
   if (keyIsPressed && keyCode == CONTROL) {
     anchors.push(new Anchor(mouseX, mouseY));
   } else if (keyIsPressed && keyCode == SHIFT) {
-    if (current_rope_start == null) {
+    if (current_rope_start === null || current_rope_start === undefined) {
       current_rope_start = getObjectAt(mouseX, mouseY, anchors.concat(weights));
     } else {
       let current_rope_end = getObjectAt(mouseX, mouseY, anchors.concat(weights))
@@ -293,7 +293,7 @@ class Anchor {
     text("load ↑: " + force.y.toFixed(2) * -1 + "kN, max: " + this.peakForceY.toFixed(2) + "kN", pos.x + 20, pos.y);
     text("load sum: " + force.length().toFixed(2) + "kN, max: " + this.peakForceSum.toFixed(2) + "kN", pos.x + 20, pos.y + 20);
     stroke(150);
-    if(current_rope_start !== null) {
+    if(current_rope_start !== null && current_rope_start !== undefined) {
       let pos = scaleToPixels(current_rope_start.body.getPosition());
       line(pos.x, pos.y, mouseX, mouseY);
     }
