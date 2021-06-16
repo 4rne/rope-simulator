@@ -64,6 +64,9 @@ function draw() {
   background(220);
 
   hoverObject = getObjectAt(mouseX, mouseY, weights.concat(anchors));
+  if(hoverObject === null || hoverObject === undefined) {
+    hoverObject = getRopeAt(mouseX, mouseY);
+  }
 
   if(draggingObject !== null) {
     draggingObject.body.setPosition(scaleToWorld(mouseX, mouseY))
@@ -98,6 +101,20 @@ function getObjectAt(x, y, objects) {
   }
 }
 
+function getRopeAt(x, y) {
+  for(let i = 0; i < ropes.length; i++) {
+    let pos1 = scaleToPixels(ropes[i].joint.getBodyA().getPosition());
+    let pos2 = scaleToPixels(ropes[i].joint.getBodyB().getPosition());
+    let ropeLength = dist(pos1.x, pos1.y, pos2.x, pos2.y);
+
+    let dist1 = dist(x, y, pos1.x, pos1.y);
+    let dist2 = dist(x, y, pos2.x, pos2.y);
+    if(dist1 + dist2 <= ropeLength + 3) {
+      return ropes[i];
+    }
+  }
+}
+
 function mousePressed() {
   if (mouseButton === LEFT && !(keyIsPressed && keyCode === SHIFT)) {
     let object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
@@ -113,8 +130,12 @@ function keyPressed() {
     object = getObjectAt(mouseX, mouseY, anchors.concat(weights));
     if (object !== null && typeof object != "undefined") {
       object.destroy();
+      return;
     }
-  }
+    object = getRopeAt(mouseX, mouseY);
+    if (object !== null && typeof object != "undefined") {
+      object.destroy();
+    }  }
 }
 
 function mouseReleased() {
@@ -188,6 +209,11 @@ class Rope {
 
   display() {
     //noFill();
+    if (hoverObject === this) {
+      stroke("orange");
+    } else {
+      stroke(50);
+    }
     strokeWeight(3.0);
     strokeJoin(ROUND);
     let posA = scaleToPixels(this.joint.getBodyA().getPosition());
@@ -240,6 +266,8 @@ class Anchor {
   }
 
   display() {
+    strokeWeight(2);
+    stroke(150);
     let pos = scaleToPixels(this.body.getPosition());
     if (hoverObject === this) {
       fill("#cde");
@@ -260,9 +288,11 @@ class Anchor {
     this.peakForceX = max(this.peakForceX, abs(force.x));
     this.peakForceY = max(this.peakForceY, abs(force.y));
     this.peakForceSum = max(this.peakForceSum, abs(force.length()));
+    noStroke();
     text("load →: " + force.x.toFixed(2) + "kN, max: " + this.peakForceX.toFixed(2) + "kN", pos.x + 20, pos.y - 20);
     text("load ↑: " + force.y.toFixed(2) * -1 + "kN, max: " + this.peakForceY.toFixed(2) + "kN", pos.x + 20, pos.y);
     text("load sum: " + force.length().toFixed(2) + "kN, max: " + this.peakForceSum.toFixed(2) + "kN", pos.x + 20, pos.y + 20);
+    stroke(150);
     if(current_rope_start !== null) {
       let pos = scaleToPixels(current_rope_start.body.getPosition());
       line(pos.x, pos.y, mouseX, mouseY);
@@ -354,6 +384,7 @@ class Weight {
     strokeWeight(2);
     rect(0, 0, 50, 50);
     pop();
+    noStroke();
     if(this.body.getJointList() !== null && 
        this.body.getJointList().next !== null && 
        this.body.getJointList().next.next === null) {
